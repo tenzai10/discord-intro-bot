@@ -8,7 +8,7 @@ const {
     VoiceConnectionStatus
 } = require('@discordjs/voice');
 const path = require('path');
-const fs = require('fs');
+const filepath = path.join(__dirname, 'intro.mp3');
 
 const client = new Client({
     intents: [
@@ -80,4 +80,5 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 });
 
 client.login(process.env.TOKEN); // Replace with your bot token
+
 
