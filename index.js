@@ -8,7 +8,10 @@ const {
     VoiceConnectionStatus
 } = require('@discordjs/voice');
 const path = require('path');
-const filepath = path.join(__dirname, 'intro.mp3');
+const fs = require('fs');
+
+// Make sure filename matches exactly: lowercase .mp3
+const INTRO_FILE = path.join(__dirname, 'intro.mp3');
 
 const client = new Client({
     intents: [
@@ -18,8 +21,8 @@ const client = new Client({
     ]
 });
 
-const YOUR_USER_ID = '514136490830462986';
-const INTRO_FILE = path.join(__dirname, 'intro.MP3');
+// 👇 Replace this with your actual Discord user ID
+const YOUR_USER_ID = 'YOUR_DISCORD_USER_ID';
 
 client.once('ready', () => {
     console.log(`🤖 Bot is online as ${client.user.tag}`);
@@ -27,58 +30,47 @@ client.once('ready', () => {
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if (
-        newState.member.id === YOUR_USER_ID &&
+        newState.member?.id === YOUR_USER_ID &&
         !oldState.channelId &&
         newState.channelId
     ) {
-        console.log("🎧 User joined voice channel.");
+        const channel = newState.channel;
 
+        // Check if the intro.mp3 file exists
         if (!fs.existsSync(INTRO_FILE)) {
-            console.error("❌ intro.MP3 not found!");
+            console.error('❌ intro.mp3 not found!');
             return;
         }
 
-        const channel = newState.channel;
-
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-            selfDeaf: false,
-        });
-
-        const player = createAudioPlayer();
-
-        const resource = createAudioResource(INTRO_FILE, {
-            inlineVolume: true // Enable volume control
-        });
-
-        // Set volume to 2%
-        resource.volume.setVolume(0.02);
-        console.log("🔉 Volume set to 2%");
-
         try {
-            await entersState(connection, VoiceConnectionStatus.Ready, 5_000);
+            const connection = joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guild.id,
+                adapterCreator: channel.guild.voiceAdapterCreator
+            });
+
+            const player = createAudioPlayer();
+            const resource = createAudioResource(INTRO_FILE);
+
             player.play(resource);
             connection.subscribe(player);
-            console.log(`🎶 Now playing: ${INTRO_FILE}`);
 
-            player.once(AudioPlayerStatus.Idle, () => {
-                console.log("🎵 Finished playing. Disconnecting.");
+            await entersState(player, AudioPlayerStatus.Playing, 5_000);
+            console.log('🎵 Playing intro.mp3');
+
+            player.on(AudioPlayerStatus.Idle, () => {
                 connection.destroy();
             });
 
-            player.once('error', err => {
-                console.error('❌ Playback error:', err);
+            player.on('error', error => {
+                console.error('❌ Audio player error:', error);
                 connection.destroy();
             });
-        } catch (err) {
-            console.error('❌ Connection failed:', err);
-            connection.destroy();
+
+        } catch (error) {
+            console.error('❌ Failed to play intro:', error);
         }
     }
 });
 
-client.login(process.env.TOKEN); // Replace with your bot token
-
-
+client.login(process.env.TOKEN);
