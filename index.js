@@ -19,7 +19,7 @@ const client = new Client({
 });
 
 const YOUR_USER_ID = '514136490830462986';
-const INTRO_FILE = path.join(__dirname, 'intro.mp3');
+const INTRO_FILE = path.join(__dirname, 'intro.MP3');
 
 client.once('ready', () => {
     console.log(`🤖 Bot is online as ${client.user.tag}`);
@@ -34,7 +34,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         console.log("🎧 User joined voice channel.");
 
         if (!fs.existsSync(INTRO_FILE)) {
-            console.error("❌ intro.mp3 not found!");
+            console.error("❌ intro.MP3 not found!");
             return;
         }
 
@@ -80,3 +80,4 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 });
 
 client.login(process.env.TOKEN); // Replace with your bot token
+
